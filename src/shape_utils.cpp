@@ -79,6 +79,7 @@ std::optional<int> RequireIntegerAtLeast(double d, int min_value) {
 */
 std::optional<Shape> MakeCircle(const std::vector<double>& v) {
     //Ваш код здесь
+    return std::nullopt;
 }
 
 /**
@@ -89,6 +90,7 @@ std::optional<Shape> MakeCircle(const std::vector<double>& v) {
 */
 std::optional<Shape> MakeLine(const std::vector<double>& v) {
     //Ваш код здесь
+    return std::nullopt;
 }
 
 /**
@@ -99,6 +101,7 @@ std::optional<Shape> MakeLine(const std::vector<double>& v) {
 */
 std::optional<Shape> MakeTriangle(const std::vector<double>& v) {
     //Ваш код здесь
+    return std::nullopt;
 }
 
 /**
@@ -110,6 +113,7 @@ std::optional<Shape> MakeTriangle(const std::vector<double>& v) {
 */
 std::optional<Shape> MakeRectangle(const std::vector<double>& v) {
     //Ваш код здесь
+    return std::nullopt;
 }
 
 /**
@@ -125,6 +129,7 @@ std::optional<Shape> MakeRectangle(const std::vector<double>& v) {
 */
 std::optional<Shape> MakePolygon(const std::vector<double>& v) {
     //Ваш код здесь
+    return std::nullopt;
 }
 
 // Парсинг одной фигуры

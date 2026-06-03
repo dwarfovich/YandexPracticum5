@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.30)
 project(GeometryApp VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 26)
+# C++26 is not supported on MSVC yet
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -11,8 +12,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-fmax-errors=1)
 
     # Игнорируем ошибки matplotplusplus
-    add_compile_options($<$<CXX_COMPILER_ID:GNU,Clang>:-Wno-deprecated-declarations>
-)
+    add_compile_options($<$<CXX_COMPILER_ID:GNU,Clang>:-Wno-deprecated-declarations>)
 endif()
 
 # Ищем необходимые библиотеки
