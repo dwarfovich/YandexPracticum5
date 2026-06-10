@@ -60,9 +60,20 @@ void PerformExtraShapeAnalysis(std::span<const Shape> shapes) {
 }
 
 int main() {
+    std::vector<Point2D> ps = {{1, 2}, {3,4}};
+    std::print("{:new_line}", ps);
+    std::print("\n");
+
     std::vector<Shape> shapes = utils::ParseShapes("circle 0 0 1.5; line 1 2 3 4; polygon 0 0 2 5; triangle 0 0 1 0 0.5 1; polygon 0 0 1 2; badshape; circle 0 0 -1");
     std::println("Parsed {} shapes", shapes.size());
 
+    geometry::Line line {{0,1}, {2,3}};
+    geometry::Circle circle {{0, 1}, 5};
+    std::variant<geometry::Line, geometry::Circle> v1 = line;
+    std::variant<geometry::Line, geometry::Circle> v2 = circle;
+    auto r = geometry::intersections::GetIntersectPoint(line, circle);
+    std::print("Intersect result: {}", r.value_or(Point2D{0,0}));
+    return 0;
     // Выведите индекс каждой фигуры и её высоту
 
     //
