@@ -15,6 +15,21 @@ using namespace geometry;
 namespace rng = std::ranges;
 namespace views = std::ranges::views;
 
+template <typename L, typename R>
+struct IsIntersectable : std::false_type {};
+
+template <>
+struct IsIntersectable<Line, Line> : std::true_type {};
+
+template <>
+struct IsIntersectable<Line, Circle> : std::true_type {};
+
+template <>
+struct IsIntersectable<Circle, Circle> : std::true_type {};
+
+template <typename L, typename R>
+inline constexpr bool IsIntersectable_v = IsIntersectable<L, R>::value;
+
 void PrintAllIntersections(const Shape &shape, std::span<const Shape> others) {
     std::println("\n=== Intersections ===");
 
@@ -26,6 +41,24 @@ void PrintAllIntersections(const Shape &shape, std::span<const Shape> others) {
      *     - Пересечение найдено в точке A между фигурами B и C
      *     - Фигуры B и C не пересекаются
      */
+    auto shapesToCheck = others | views::filter([&shape](const Shape &s) {
+                             return (std::holds_alternative<Line>(shape) && std::holds_alternative<Line>(s)) ||
+                                    (std::holds_alternative<Line>(shape) && std::holds_alternative<Circle>(s)) ||
+                                    (std::holds_alternative<Circle>(shape) && std::holds_alternative<Circle>(s));
+                         });
+
+    geometry::intersections::IntersectionVisitor visitor;
+    std::ranges::for_each(shapesToCheck, [&](const Shape &other) {
+        std::visit(visitor, shape, other)
+            .transform([&](const Point2D &p) {
+                // std::println("Intersection found at {} between {} and {}", p, shape, other);
+                return p;
+            })
+            .or_else([&] {
+                //std::println("{} and {} do not intersect", shape, other);
+                return std::optional<Point2D>{};
+            });
+        });
 }
 
 void PrintDistancesFromPointToShapes(Point2D p, std::span<const Shape> shapes) {
@@ -60,26 +93,26 @@ void PerformExtraShapeAnalysis(std::span<const Shape> shapes) {
 }
 
 int main() {
-    std::vector<Point2D> ps = {{1, 2}, {3,4}};
+    std::vector<Point2D> ps = {{1, 2}, {3, 4}};
     std::print("{:new_line}", ps);
     std::print("\n");
 
-    std::vector<Shape> shapes = utils::ParseShapes("circle 0 0 1.5; line 1 2 3 4; polygon 0 0 2 5; triangle 0 0 1 0 0.5 1; polygon 0 0 1 2; badshape; circle 0 0 -1");
+    std::vector<Shape> shapes = utils::ParseShapes("circle 0 0 1.5; line 1 2 3 4; polygon 0 0 2 5; triangle 0 0 1 0 "
+                                                   "0.5 1; polygon 0 0 1 2; badshape; circle 0 0 -1");
     std::println("Parsed {} shapes", shapes.size());
 
-    geometry::Line line {{0,1}, {2,3}};
-    geometry::Circle circle {{0, 1}, 5};
+    geometry::Line line{{0, 1}, {2, 3}};
+    geometry::Circle circle{{0, 1}, 5};
     std::variant<geometry::Line, geometry::Circle> v1 = line;
     std::variant<geometry::Line, geometry::Circle> v2 = circle;
     auto r = geometry::intersections::GetIntersectPoint(line, circle);
-    std::print("Intersect result: {}", r.value_or(Point2D{0,0}));
-    return 0;
+    std::print("Intersect result: {}", r.value_or(Point2D{0, 0}));
     // Выведите индекс каждой фигуры и её высоту
 
     //
     // Вызываем разработанные функции
     //
-    //PrintAllIntersections(shapes[0], shapes);
+    PrintAllIntersections(shapes[0], shapes);
 
     PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
 
@@ -102,7 +135,7 @@ int main() {
     /* ваш код здесь */
 
     //
-    // Находим список точек, для построения выпуклой оболочки - convex hull - алгоритмом Грэхема 
+    // Находим список точек, для построения выпуклой оболочки - convex hull - алгоритмом Грэхема
     // Создаём из них объект класса `Polygon` и добавляем его в список shapes
     // Рисуем все фигуры
     //

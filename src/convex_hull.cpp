@@ -12,7 +12,7 @@ double CrossProduct(Point2D p1, Point2D middle, Point2D p2) {
 
 std::expected<std::vector<Point2D>, std::string> GrahamScan(std::span<Point2D> points) noexcept {
     if (points.size() < 3) {
-        throw std::logic_error("At least three points are required for convex hull.");
+        return std::unexpected("At least three points are required for convex hull.");
     }
 
     auto smallest = *std::min_element(points.begin(), points.end());
@@ -35,6 +35,7 @@ std::expected<std::vector<Point2D>, std::string> GrahamScan(std::span<Point2D> p
         hull.Push(new_p);
     }
 
-    return std::vector{hull.Extract()};}
+    return std::vector{hull.Extract()};
+}
 
 }  // namespace geometry::convex_hull
