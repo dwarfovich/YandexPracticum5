@@ -162,6 +162,7 @@ std::optional<Shape> MakePolygon(const std::vector<double> &v) {
                                           return std::make_optional(sides);
                                       }})
            .transform([&v](int sides) { return RegularPolygon{{v[0], v[1]}, v[2], sides}; });
+    // clang-format on
 }
 
 // Парсинг одной фигуры
@@ -231,30 +232,27 @@ std::vector<Shape> ParseShapes(std::string_view input) {
 
 std::vector<std::pair<Shape, Shape>> FindAllCollisions(std::span<const Shape> shapes) {
     std::vector<std::pair<Shape, Shape>> collisions;
+    for (auto i : std::views::iota(size_t{0}, shapes.size())) {
+        auto colliding = std::views::iota(i + 1, shapes.size()) | std::views::filter([&](size_t j) {
+                             return geometry::ShapesBoundingBoxesIntersect(shapes[i], shapes[j]);
+                         });
 
-    //for (auto i : std::views::iota(size_t{0}, shapes.size())) {
-    //    auto colliding =
-    //        std::views::iota(i + 1, shapes.size())
-    //        | std::views::filter([&](size_t j) {
-    //              return shapes[i].BoundingBoxesOverlap(shapes[j]);
-    //          });
-
-    //    std::ranges::for_each(colliding, [&](size_t j) {
-    //        collisions.emplace_back(shapes[i], shapes[j]);
-    //    });
-    //}
+        std::ranges::for_each(colliding, [&](size_t j) { collisions.emplace_back(shapes[i], shapes[j]); });
+    }
 
     return collisions;
 }
 
 std::optional<size_t> FindHighestShape(std::span<const Shape> shapes) {
+    if (shapes.empty()) {
+        return std::nullopt;
+    }
 
-    /*
-     * Используйте библиотеку ranges, чтобы найти самую высокую фигуру
-     *
-     * Важно: использование ручной итерации по фигурам не разрешается
-     */
+    const auto iter = std::ranges::max_element(shapes, {}, [](const Shape &shape) {
+        return std::visit([](const auto &s) { return s.Height(); }, shape);
+    });
 
-    return std::nullopt;
+    return std::distance(shapes.begin(), iter);
 }
+
 }  // namespace geometry::utils

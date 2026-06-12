@@ -33,9 +33,9 @@ struct Point2D {
     }
 
     // Binary geometry operations
-    [[nodiscard]] double Dot(const Point2D &other) noexcept { return x * other.x + y * other.y; }
+    [[nodiscard]] double Dot(const Point2D &other) const noexcept { return x * other.x + y * other.y; }
     [[nodiscard]] double Cross(const Point2D &other) const noexcept { return x * other.y - y * other.x; }
-    [[nodiscard]] double Length() noexcept { return std::sqrt(x * x + y * y); }
+    [[nodiscard]] double Length() const noexcept { return std::sqrt(x * x + y * y); }
     [[nodiscard]] double DistanceTo(const Point2D &other) const noexcept { return (*this - other).Length(); }
 
     [[nodiscard]] Point2D Normalize() noexcept {
@@ -269,7 +269,17 @@ private:
     BoundingBox bounding_box_;
 };
 
+inline bool BoundingBoxesIntersect(const BoundingBox &lhs, const BoundingBox &rhs) noexcept{
+    return lhs.min_x <= rhs.max_x && rhs.min_x <= lhs.max_x && lhs.min_y <= rhs.max_y && rhs.min_y <= lhs.max_y;
+}
+
 using Shape = std::variant<Line, Triangle, Rectangle, RegularPolygon, Circle, Polygon>;
+
+inline bool ShapesBoundingBoxesIntersect(const Shape &lhs, const Shape &rhs) noexcept {
+    return BoundingBoxesIntersect(std::visit([](const auto &s) { return s.BoundBox(); }, lhs),
+                                  std::visit([](const auto &s) { return s.BoundBox(); }, rhs));
+}
+
 }  // namespace geometry
 
 template <>
