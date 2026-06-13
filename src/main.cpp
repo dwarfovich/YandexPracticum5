@@ -127,6 +127,7 @@ int main() {
 
     std::vector<Shape> shapes = utils::ParseShapes("circle 0 0 1.5; line 1 2 3 4; polygon 0 0 2 5; triangle 0 0 1 0 "
                                                    "0.5 1; polygon 0 0 1 2; badshape; circle 0 0 -1");
+
     std::println("Parsed {} shapes", shapes.size());
 
     geometry::Line line{{0, 1}, {2, 3}};
@@ -146,13 +147,13 @@ int main() {
     //
     // Вызываем разработанные функции
     //
-    //PrintAllIntersections(shapes[0], shapes);
+    // PrintAllIntersections(shapes[0], shapes);
 
-    //PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
+    // PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
 
-    //PerformShapeAnalysis(shapes);
+    // PerformShapeAnalysis(shapes);
 
-    //PerformExtraShapeAnalysis(shapes);
+    // PerformExtraShapeAnalysis(shapes);
 
     //
     // Рисуем все фигуры
@@ -165,8 +166,14 @@ int main() {
     // Формируем список из вершин всех фигур
     //
     std::vector<Point2D> points;
-
-    /* ваш код здесь */
+    rng::for_each(shapes, [&points](const auto &shape) {
+        std::visit(
+            [&points](const auto &s) {
+                auto &&vertices = s.Vertices();
+                points.insert(points.end(), vertices.begin(), vertices.end());
+            },
+            shape);
+    });
 
     //
     // Находим список точек, для построения выпуклой оболочки - convex hull - алгоритмом Грэхема
@@ -174,15 +181,23 @@ int main() {
     // Рисуем все фигуры
     //
 
-    /* ваш код здесь */
+    auto hull = geometry::convex_hull::GrahamScan(points);
+    if (hull.has_value()) {
+        shapes.emplace_back(geometry::Polygon{std::move(hull.value())});
+    }
 
+    geometry::visualization::Draw(shapes);
     //
     // после изучения графика - нажмите Enter чтобы продолжить выполнение и построить 3ий график
     //
 
     {
         std::vector<Point2D> points = {{0, 0}, {10, 0}, {5, 8}, {15, 5}, {2, 12}};
-
+        auto result = geometry::triangulation::DelaunayTriangulation(points);
+        if(result.has_value()){
+            const auto& triangles = result.value();
+            geometry::visualization::Draw(triangles);
+        }
         //
         // Используйте список точек points или свой, чтобы
         // выполнить алгоритм триангуляции Делоне алгоритмом Боуэра-Ватсона

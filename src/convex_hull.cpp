@@ -17,7 +17,7 @@ std::expected<std::vector<Point2D>, std::string> GrahamScan(std::span<Point2D> p
 
     auto smallest = *std::min_element(points.begin(), points.end());
 
-    std::sort(points.begin() + 1, points.end(), [&smallest](const Point2D &p1, const Point2D &p2) {
+    std::sort(points.begin(), points.end(), [&smallest](const Point2D &p1, const Point2D &p2) {
         static const auto precision = 1e-10;
 
         double cross = CrossProduct(p1, smallest, p2);
