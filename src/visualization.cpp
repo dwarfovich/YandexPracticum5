@@ -50,9 +50,32 @@ void Draw(std::span<geometry::Shape> shapes) {
          */
 
         //ваш код тут
+        // using Shape = std::variant<Line, Triangle, Rectangle, RegularPolygon, Circle, Polygon>;
+        // clang-format off
+        std::visit(Multilambda{[](const Line& line){ const auto& ls = line.Lines();
+                                                     plot(ls.x, ls.y)->line_width(2).color("yellow");
+                                                   },
+                               [](const Triangle& t){ const auto& ls = t.Lines();
+                                                      plot(ls.x, ls.y)->line_width(2).color("blue");
+                                                    },
+                               [](const Rectangle& r){ const auto& ls = r.Lines();
+                                                       plot(ls.x, ls.y)->line_width(2).color("green");
+                                                     },
+                               [](const RegularPolygon& r){ const auto& ls = r.Lines();
+                                                            plot(ls.x, ls.y)->line_width(2).color("magenta");
+                                                          },
+                               [](const Circle& c){ const auto& ls = c.Lines();
+                                                    plot(ls.x, ls.y)->line_width(2).color("red");
+                                                  },
+                               [](const Polygon& p){ const auto& ls = p.Lines();
+                                                     plot(ls.x, ls.y)->line_width(2).color("cyan");
+                                                   },
+                               [](const auto& any){}
+                              }, shape); 
+        // clang-format on
         // Add shape number
 //        const auto center = shape.visit([](auto &&s) { return s.Center(); });
-        const auto center = std::visit([](auto &&s) { return s.Center(); }, shape);
+        const auto center = std::visit([](const auto &s) { return s.Center(); }, shape);
         auto t = text(center.x, center.y, std::to_string(index));
         t->font_size(14);
         t->color("black");

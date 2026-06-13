@@ -43,7 +43,7 @@ void PrintAllIntersections(const Shape &shape, std::span<const Shape> others) {
                 std::println("{} and {} do not intersect", shape, other);
                 return std::optional<Point2D>{};
             });
-        });
+    });
 }
 
 void PrintDistancesFromPointToShapes(Point2D p, std::span<const Shape> shapes) {
@@ -54,28 +54,70 @@ void PrintDistancesFromPointToShapes(Point2D p, std::span<const Shape> shapes) {
      * Затем найдите расстояния от заданной точки до всех выбранных фигур.
      * Выведите результат в формате "Расстояние от точки P до фигуры S равно D"
      */
-
+    geometry::queries::PointToShapeDistanceVisitor visitor{p};
+    auto selected_shapes = shapes | views::take(5);
+    rng::for_each(selected_shapes, [&p, &visitor](const auto &shape) {
+        const auto distance = std::visit(visitor, shape);
+        std::print("Distance from point {} to figure {} is {}\n", p, shape, distance);
+    });
 }
 
 void PerformShapeAnalysis(std::span<const Shape> shapes) {
     std::println("\n=== Shape Analysis ===");
-
     /*
      * Используйте ranges и созданные классы чтобы:
      *     - Найти все пересечения между фигурами используя метод Bounding Box
      *     - Найти самую высокую фигуру (чья высота наибольшая)expected
      *     - Вывести расстояние между любыми двумя фигурами, которые поддерживают данную функциональность
      */
+
+    geometry::intersections::IntersectionVisitor intersectionVisitor;
+    for (auto &&[i, shape] : shapes | views::enumerate) {
+        rng::for_each(shapes | std::views::drop(i), [&](const auto &other) {
+            try {
+                auto intersection = std::visit(intersectionVisitor, shapes[i], other);
+                std::print("Shape {} intersects with shape {} at point {}\n", shapes[i], other, intersection.value());
+            } catch (const std::exception &e) {
+                std::print("Shape {} has no algorithm to find intersection with shape {}\n", shapes[i], other);
+            }
+        });
+    }
+
+    auto GetHeight = [](const auto &shape) { return std::visit([](const auto &s) { return s.Height(); }, shape); };
+    auto iter = rng::max_element(shapes, {}, GetHeight);
+    if (iter != shapes.end()) {
+        std::print("Highest shape: {}, height = {}\n", *iter, GetHeight(*iter));
+    } else {
+        std::print("Couldn't find the tallest figure.\n");
+    }
+
+    geometry::queries::ShapeToShapeDistanceVisitor distance_visitor;
+    for (auto &&[i, shape] : shapes | views::enumerate) {
+        rng::for_each(shapes | std::views::drop(i), [&](const auto &other) {
+            auto distance = std::visit(distance_visitor, shapes[i], other);
+            if (distance.has_value()) {
+                std::print("Distance from {} to {} is {}\n", shapes[i], other, distance.value());
+            }
+        });
+    }
 }
 
 void PerformExtraShapeAnalysis(std::span<const Shape> shapes) {
     std::println("\n=== Shape Extra Analysis ===");
-
     /*
      * Используйте ranges и созданные классы чтобы:
      *     - Вывести 3 любые фигуры, которые находятся выше 50.0
      *     - Вывести фигуры с наименьшей и с наибольшей высотами
      */
+
+    // clang-format off
+    auto highest_shapes = shapes
+                          | views::filter([](const auto &shape) {
+                              return std::visit([](const auto &s) { return s.BoundBox().max_y > 50.; }, shape);
+                          })
+                          | views::take(3);
+    // clang-format on
+    rng::for_each(highest_shapes, [](const auto &shape) { std::print("The {} is higher than 50.0", shape); });
 }
 
 int main() {
@@ -89,24 +131,28 @@ int main() {
 
     geometry::Line line{{0, 1}, {2, 3}};
     geometry::Circle circle{{0, 1}, 5};
-    std::variant<geometry::Line, geometry::Circle> v1 = line;
-    std::variant<geometry::Line, geometry::Circle> v2 = circle;
+    geometry::Shape v1 = line;
+    geometry::Shape v2 = circle;
     auto r = geometry::intersections::GetIntersectPoint(line, circle);
-    std::print("Intersect result: {}", r.value_or(Point2D{0, 0}));
+    std::print("Intersect result: {}\n\n", r.value_or(Point2D{0, 0}));
+
     // Выведите индекс каждой фигуры и её высоту
+    std::print("Heights:\n");
+    for (auto &&[i, shape] : shapes | std::views::enumerate) {
+        std::print("{}: Shape {}, height = {}\n", i, shape,
+                   std::visit([](const auto &s) { return s.Height(); }, shape));
+    }
 
     //
     // Вызываем разработанные функции
     //
-    PrintAllIntersections(shapes[0], shapes);
+    //PrintAllIntersections(shapes[0], shapes);
 
+    //PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
 
-    PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
-    return 0;
+    //PerformShapeAnalysis(shapes);
 
-    PerformShapeAnalysis(shapes);
-
-    PerformExtraShapeAnalysis(shapes);
+    //PerformExtraShapeAnalysis(shapes);
 
     //
     // Рисуем все фигуры
