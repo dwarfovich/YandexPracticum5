@@ -269,7 +269,7 @@ private:
     BoundingBox bounding_box_;
 };
 
-inline bool BoundingBoxesIntersect(const BoundingBox &lhs, const BoundingBox &rhs) noexcept{
+inline bool BoundingBoxesIntersect(const BoundingBox &lhs, const BoundingBox &rhs) noexcept {
     return lhs.min_x <= rhs.max_x && rhs.min_x <= lhs.max_x && lhs.min_y <= rhs.max_y && rhs.min_y <= lhs.max_y;
 }
 
@@ -331,6 +331,16 @@ struct std::formatter<std::vector<geometry::Point2D>> {
 };
 
 template <>
+struct std::formatter<geometry::Shape> {
+    constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const geometry::Shape &s, FormatContext &ctx) const {
+        return std::visit([&ctx](const auto &shape) { return std::format_to(ctx.out(), "{}", shape); }, s);
+    }
+};
+
+template <>
 struct std::formatter<geometry::Line> {
     constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
 
@@ -376,7 +386,7 @@ struct std::formatter<geometry::Triangle> {
     constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const geometry::Triangle &t, FormatContext &ctx) {
+    auto format(const geometry::Triangle &t, FormatContext &ctx) const {
         return std::format_to(ctx.out(), "Triangle({}, {}, {})", t.a, t.b, t.c);
     }
 };
@@ -385,7 +395,7 @@ struct std::formatter<geometry::Polygon> {
     constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const geometry::Polygon &poly, FormatContext &ctx) {
+    auto format(const geometry::Polygon &poly, FormatContext &ctx) const {
         auto out = ctx.out();
         out = std::format_to(out, "Polygon[{} points]: [", poly.Vertices().size());
 

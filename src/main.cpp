@@ -15,21 +15,6 @@ using namespace geometry;
 namespace rng = std::ranges;
 namespace views = std::ranges::views;
 
-template <typename L, typename R>
-struct IsIntersectable : std::false_type {};
-
-template <>
-struct IsIntersectable<Line, Line> : std::true_type {};
-
-template <>
-struct IsIntersectable<Line, Circle> : std::true_type {};
-
-template <>
-struct IsIntersectable<Circle, Circle> : std::true_type {};
-
-template <typename L, typename R>
-inline constexpr bool IsIntersectable_v = IsIntersectable<L, R>::value;
-
 void PrintAllIntersections(const Shape &shape, std::span<const Shape> others) {
     std::println("\n=== Intersections ===");
 
@@ -51,11 +36,11 @@ void PrintAllIntersections(const Shape &shape, std::span<const Shape> others) {
     std::ranges::for_each(shapesToCheck, [&](const Shape &other) {
         std::visit(visitor, shape, other)
             .transform([&](const Point2D &p) {
-                // std::println("Intersection found at {} between {} and {}", p, shape, other);
+                std::println("Intersection found at {} between {} and {}", p, shape, other);
                 return p;
             })
             .or_else([&] {
-                //std::println("{} and {} do not intersect", shape, other);
+                std::println("{} and {} do not intersect", shape, other);
                 return std::optional<Point2D>{};
             });
         });
@@ -69,6 +54,7 @@ void PrintDistancesFromPointToShapes(Point2D p, std::span<const Shape> shapes) {
      * Затем найдите расстояния от заданной точки до всех выбранных фигур.
      * Выведите результат в формате "Расстояние от точки P до фигуры S равно D"
      */
+
 }
 
 void PerformShapeAnalysis(std::span<const Shape> shapes) {
@@ -114,7 +100,9 @@ int main() {
     //
     PrintAllIntersections(shapes[0], shapes);
 
+
     PrintDistancesFromPointToShapes(Point2D{10.0, 10.0}, shapes);
+    return 0;
 
     PerformShapeAnalysis(shapes);
 
