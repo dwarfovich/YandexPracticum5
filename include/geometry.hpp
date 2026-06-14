@@ -46,6 +46,8 @@ struct Point2D {
 
 template <size_t N>
 struct Lines2D {
+    bool operator==(const Lines2D& rhs) const noexcept = default;
+
     std::array<double, N> x;
     std::array<double, N> y;
 };
@@ -75,6 +77,10 @@ struct BoundingBox {
     constexpr BoundingBox() noexcept : min_x(0), min_y(0), max_x(0), max_y(0) {}
     constexpr BoundingBox(double min_x, double min_y, double max_x, double max_y) noexcept
         : min_x(min_x), min_y(min_y), max_x(max_x), max_y(max_y) {}
+
+    bool operator==(const BoundingBox& rhs) const noexcept{
+        return std::tie(min_x, max_x, min_y, max_y) == std::tie(rhs.min_x, rhs.max_x, rhs.min_y, rhs.max_y);
+    }
 
     [[nodiscard]] constexpr bool Overlaps(const BoundingBox &other) const noexcept {
         return !(max_x < other.min_x || min_x > other.max_x || max_y < other.min_y || min_y > other.max_y);
@@ -248,21 +254,10 @@ public:
 
 private:
     void CalculateBoundBox() {
-        double min_x = points_[0].x, max_x = points_[0].x;
-        double min_y = points_[0].y, max_y = points_[0].y;
+        const auto [min_x_it, max_x_it] = std::ranges::minmax(points_, std::less{}, &Point2D::x);
+        const auto [min_y_it, max_y_it] = std::ranges::minmax(points_, std::less{}, &Point2D::y);
 
-        for (const auto &p : points_) {
-            if (p.x < min_x)
-                min_x = p.x;
-            if (p.x > max_x)
-                max_x = p.x;
-            if (p.y < min_y)
-                min_y = p.y;
-            if (p.y > max_y)
-                max_y = p.y;
-        }
-
-        bounding_box_ = BoundingBox{min_x, min_y, max_x, max_y};
+        bounding_box_ = BoundingBox{min_x_it.x, min_y_it.y, max_x_it.x, max_y_it.y};
     }
 
     std::vector<Point2D> points_;
@@ -312,20 +307,13 @@ struct std::formatter<std::vector<geometry::Point2D>> {
     template <typename FormatContext>
     auto format(const std::vector<geometry::Point2D> &v, FormatContext &ctx) const {
         auto out = ctx.out();
-        // Standard loop may be simpler than ranges.
         for (std::size_t i = 0; i < v.size(); ++i) {
             out = use_new_line ? std::format_to(out, "\t{}", v[i]) : std::format_to(out, "{}", v[i]);
             if (i != v.size() - 1) {
                 out = use_new_line ? std::format_to(out, "\n") : std::format_to(out, ", ");
             }
         }
-        // for (const auto &[i, p] : v | std::views::enumerate) {
-        //     use_new_line ? out = std::format_to(out, "\t{}", p) : out = std::format_to(out, "{}", p);
-        //     if (i + 1 != v.size()) {
-        //         out = use_new_line ? std::format_to(out, "\n") : std::format_to(out, ", ");
-        //     }
-        // }
-
+        
         return out;
     }
 };
