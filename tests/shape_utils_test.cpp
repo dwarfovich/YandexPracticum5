@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
 #include "shape_utils.hpp"
+#include "geometry.hpp"
 
-TEST(ShapeUtilsTest, SimpleCheck) { EXPECT_EQ(1 + 1, 2); }
+#include <gtest/gtest.h>

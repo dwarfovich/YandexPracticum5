@@ -10,14 +10,14 @@ double CrossProduct(Point2D p1, Point2D middle, Point2D p2) {
     return new_p1.Cross(new_p2);
 }
 
-std::vector<Point2D> GrahamScan(std::span<Point2D> points) {
+std::expected<std::vector<Point2D>, std::string> GrahamScan(std::span<Point2D> points) noexcept {
     if (points.size() < 3) {
-        throw std::logic_error("At least three points are required for convex hull.");
+        return std::unexpected("At least three points are required for convex hull.");
     }
 
     auto smallest = *std::min_element(points.begin(), points.end());
 
-    std::sort(points.begin() + 1, points.end(), [&smallest](const Point2D &p1, const Point2D &p2) {
+    std::sort(points.begin(), points.end(), [&smallest](const Point2D &p1, const Point2D &p2) {
         static const auto precision = 1e-10;
 
         double cross = CrossProduct(p1, smallest, p2);
@@ -35,6 +35,7 @@ std::vector<Point2D> GrahamScan(std::span<Point2D> points) {
         hull.Push(new_p);
     }
 
-    return std::vector{hull.Extract()};}
+    return std::vector{hull.Extract()};
+}
 
 }  // namespace geometry::convex_hull
